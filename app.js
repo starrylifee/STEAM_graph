@@ -21,7 +21,7 @@ const gamesData = [
     title: "도와줘 인형 배송",
     student: "미니언즈 4중사",
     concept: "막대그래프를 읽고 눈금을 해석해 수량 맞추기",
-    summary: "컨베이어로 밀려오는 인형을 주문서 그래프와 똑같아지게 배송합니다. 떨어뜨리면 부서지고, 너무 보내면 손님이 화나요!",
+    summary: "컨베이어로 밀려오는 인형을 주문서 그래프와 똑같아지게 배송합니다. 레벨이 오르면 폭탄 💣이 섞이고, 인형마다 배송지가 달라져요!",
     sheets: [5, 6, 7].map(readableSheet),
     originalSheets: [5, 6, 7].map(originalSheet),
     preview: readableSheet(7),
@@ -935,11 +935,12 @@ class DeliveryGraphGame extends BaseGame {
         travelMs: 9000,
         gapMs: 2200,
         spares: 3,
-        goldens: 0
+        bombs: 0,
+        typed: false
       },
       {
-        title: "눈금을 읽어라",
-        story: "이번 주문서에는 숫자가 없어요! 막대 끝이 닿은 눈금을 읽어서 몇 개인지 알아내야 해요.",
+        title: "폭탄 주의보",
+        story: "주문서에 숫자가 없어요! 눈금을 읽으세요. 게다가 컨베이어에 폭탄 💣이 섞여서 나옵니다!",
         makeTargets: () => [pickBetween(4, 8), pickBetween(4, 8), pickBetween(4, 8)],
         max: 8,
         unit: 1,
@@ -947,19 +948,21 @@ class DeliveryGraphGame extends BaseGame {
         travelMs: 7500,
         gapMs: 1900,
         spares: 3,
-        goldens: 0
+        bombs: 3,
+        typed: false
       },
       {
-        title: "황금 인형 러시",
-        story: "눈금 한 칸이 2개예요! 그리고 황금 인형 ⭐은 한 번에 2개로 배송됩니다. 2개 이상 필요한 곳에만 보낼 수 있어요.",
-        makeTargets: () => [0, 0, 0].map(() => [6, 8, 10][Math.floor(Math.random() * 3)]),
-        max: 10,
-        unit: 2,
+        title: "맞춤 배송 대작전",
+        story: "인형마다 가는 곳이 달라요! 곰인형 🧸은 가게, 토끼인형 🐰은 집, 고양이인형 🐱은 해외로. 폭탄 💣도 여전히 섞여 있어요!",
+        makeTargets: () => [pickBetween(4, 7), pickBetween(4, 7), pickBetween(4, 7)],
+        max: 8,
+        unit: 1,
         showTargetValues: false,
         travelMs: 6800,
         gapMs: 1500,
-        spares: 3,
-        goldens: 4
+        spares: 1,
+        bombs: 4,
+        typed: true
       }
     ];
     this.dests = [
@@ -967,7 +970,28 @@ class DeliveryGraphGame extends BaseGame {
       { name: "집", icon: "🏠" },
       { name: "해외", icon: "✈️" }
     ];
+    this.dollTypes = [
+      { name: "곰인형", emoji: "🧸" },
+      { name: "토끼인형", emoji: "🐰" },
+      { name: "고양이인형", emoji: "🐱" }
+    ];
     this.colors = ["#d95f4f", "#3f75c9", "#257a5c"];
+  }
+
+  briefRules() {
+    const rules = [`<strong>임무:</strong> ${this.level.story}`];
+    rules.push("<strong>규칙 1:</strong> 컨베이어 맨 앞 물건이 배송돼요. 버튼이나 숫자키 1·2·3으로 목적지를 고르세요.");
+    rules.push("<strong>규칙 2:</strong> 주문량보다 많이 보내면 손님 불만 ❗이 쌓여요. 불만이 3번이면 실패!");
+    if (this.level.typed) {
+      rules.push("<strong>규칙 3:</strong> 인형마다 배송지가 정해져 있어요! 🧸 곰인형 → 🏪 가게, 🐰 토끼인형 → 🏠 집, 🐱 고양이인형 → ✈️ 해외. 다른 곳으로 보내면 손님 불만!");
+      rules.push(`<strong>규칙 4:</strong> 인형을 떨어뜨리거나 버리면 부서져요. 여분은 종류별로 딱 ${this.level.spares}개!`);
+    } else {
+      rules.push(`<strong>규칙 3:</strong> 인형을 너무 많이 떨어뜨리면 주문을 채울 수 없게 돼요. 여분은 딱 ${this.level.spares}개!`);
+    }
+    if (this.level.bombs > 0) {
+      rules.push(`<strong>규칙 ${this.level.typed ? 5 : 4}:</strong> 폭탄 💣은 절대 배송하면 안 돼요! 맨 앞에 오면 폐기 버튼(숫자키 4)으로 버리세요. 끝까지 두면 터져서 손님 불만이 쌓여요!`);
+    }
+    return rules;
   }
 
   initLevel() {
@@ -987,10 +1011,7 @@ class DeliveryGraphGame extends BaseGame {
           <span class="scene-badge">인형 배송 센터</span>
         </div>
         <div class="hunt-brief">
-          <p class="panel-copy"><strong>임무:</strong> ${this.level.story}</p>
-          <p class="panel-copy"><strong>규칙 1:</strong> 컨베이어 맨 앞 인형이 배송돼요. 버튼이나 숫자키 1·2·3으로 목적지를 고르세요.</p>
-          <p class="panel-copy"><strong>규칙 2:</strong> 주문량보다 많이 보내면 손님 불만 ❗이 쌓여요. 불만이 3번이면 실패!</p>
-          <p class="panel-copy"><strong>규칙 3:</strong> 인형을 너무 많이 떨어뜨리면 주문을 채울 수 없게 돼요. 여분은 딱 ${this.level.spares}개!</p>
+          ${this.briefRules().map((rule) => `<p class="panel-copy">${rule}</p>`).join("")}
         </div>
       </div>
     `;
@@ -1012,11 +1033,16 @@ class DeliveryGraphGame extends BaseGame {
     this.complaints = 0;
     this.broken = 0;
     this.belt = [];
-    const need = this.targets.reduce((a, b) => a + b, 0);
     const plan = [];
-    for (let k = 0; k < this.level.goldens; k += 1) plan.push(2);
-    const normals = need - this.level.goldens * 2 + this.level.spares;
-    for (let k = 0; k < normals; k += 1) plan.push(1);
+    if (this.level.typed) {
+      this.targets.forEach((target, type) => {
+        for (let k = 0; k < target + this.level.spares; k += 1) plan.push({ type });
+      });
+    } else {
+      const need = this.targets.reduce((a, b) => a + b, 0);
+      for (let k = 0; k < need + this.level.spares; k += 1) plan.push({ type: null });
+    }
+    for (let k = 0; k < this.level.bombs; k += 1) plan.push({ bomb: true });
     for (let i = plan.length - 1; i > 0; i -= 1) {
       const j = Math.floor(Math.random() * (i + 1));
       [plan[i], plan[j]] = [plan[j], plan[i]];
@@ -1026,6 +1052,11 @@ class DeliveryGraphGame extends BaseGame {
     this.renderRunControls();
     if (this.keyHandler) window.removeEventListener("keydown", this.keyHandler);
     this.keyHandler = (event) => {
+      if (event.key === "4" && this.level.bombs > 0) {
+        event.preventDefault();
+        this.trashFront();
+        return;
+      }
       const index = ["1", "2", "3"].indexOf(event.key);
       if (index === -1) return;
       event.preventDefault();
@@ -1050,7 +1081,7 @@ class DeliveryGraphGame extends BaseGame {
               <div class="dchart-bar" id="${idPrefix}-bar-${i}" style="height:${(values[i] / max) * 100}%; --bar-color:${this.colors[i]}">
                 ${showValues ? `<span class="dchart-val" id="${idPrefix}-val-${i}">${values[i]}</span>` : ""}
               </div>
-              <span class="dchart-name">${dest.icon} ${dest.name}</span>
+              <span class="dchart-name">${this.level.typed ? `${this.dollTypes[i].emoji} ` : ""}${dest.icon} ${dest.name}</span>
             </div>
           `).join("")}
         </div>
@@ -1063,7 +1094,7 @@ class DeliveryGraphGame extends BaseGame {
       <div class="storybook">
         <div class="scene-title">
           <h3>${this.level.title} · 배송 중</h3>
-          <span class="scene-badge">남은 인형 <b id="hud-left">${this.dollPlan.length}</b></span>
+          <span class="scene-badge">남은 인형 <b id="hud-left">${this.dollPlan.filter((item) => !item.bomb).length}</b></span>
         </div>
         <div class="belt-lane" id="belt-lane"></div>
         <div class="order-row">
@@ -1081,17 +1112,29 @@ class DeliveryGraphGame extends BaseGame {
   }
 
   renderRunControls() {
+    const hint = this.level.typed
+      ? "노란 테두리가 맨 앞이에요. 인형 종류에 맞는 배송지로, 폭탄은 폐기로 보내세요!"
+      : this.level.bombs > 0
+        ? "노란 테두리가 맨 앞이에요. 인형은 모자란 곳으로, 폭탄 💣은 폐기 버튼으로 버리세요!"
+        : "노란 테두리가 맨 앞 인형이에요. 주문서와 내 그래프를 비교해서 아직 모자란 곳으로 보내세요!";
     this.controls.innerHTML = `
       <h3 class="panel-title">배송 보내기</h3>
-      <p class="panel-copy">노란 테두리가 맨 앞 인형이에요. 주문서와 내 그래프를 비교해서 아직 모자란 곳으로 보내세요!</p>
+      <p class="panel-copy">${hint}</p>
       <div class="dest-buttons">
         ${this.dests.map((dest, i) => `
           <button class="dest-button" type="button" id="dest-${i}">
             <span class="dest-icon">${dest.icon}</span>
-            <span class="dest-name">${dest.name}</span>
+            <span class="dest-name">${dest.name}${this.level.typed ? `<small class="dest-sub">${this.dollTypes[i].emoji} ${this.dollTypes[i].name}</small>` : ""}</span>
             <span class="dest-key">${i + 1}</span>
           </button>
         `).join("")}
+        ${this.level.bombs > 0 ? `
+          <button class="dest-button trash" type="button" id="dest-trash">
+            <span class="dest-icon">🗑️</span>
+            <span class="dest-name">폐기<small class="dest-sub">💣 폭탄은 여기로!</small></span>
+            <span class="dest-key">4</span>
+          </button>
+        ` : ""}
       </div>
       <p class="complaint-line">손님 불만 <span id="complaint-meter">○ ○ ○</span></p>
       <p class="panel-copy">부서진 인형 <b id="hud-broken">0</b>개</p>
@@ -1100,6 +1143,8 @@ class DeliveryGraphGame extends BaseGame {
     this.dests.forEach((_, i) => {
       document.getElementById(`dest-${i}`).onclick = () => this.sendFront(i);
     });
+    const trash = document.getElementById("dest-trash");
+    if (trash) trash.onclick = () => this.trashFront();
   }
 
   setFeedback(text, kind) {
@@ -1110,19 +1155,24 @@ class DeliveryGraphGame extends BaseGame {
     if (kind) note.classList.add(kind);
   }
 
+  itemEmoji(item) {
+    if (item.bomb) return "💣";
+    return item.type === null ? "🧸" : this.dollTypes[item.type].emoji;
+  }
+
   spawnDoll() {
     if (this.phase !== "run" || !this.dollPlan.length) return;
     const lane = document.getElementById("belt-lane");
     if (!lane) return;
-    const worth = this.dollPlan.shift();
+    const item = this.dollPlan.shift();
     const el = document.createElement("div");
-    el.className = `belt-doll${worth === 2 ? " golden" : ""}`;
-    el.innerHTML = worth === 2 ? "🧸<i>⭐2개</i>" : "🧸";
+    el.className = `belt-doll${item.bomb ? " bomb" : ""}`;
+    el.textContent = this.itemEmoji(item);
     el.style.transition = `left ${this.level.travelMs}ms linear`;
     lane.append(el);
     void el.offsetWidth;
     el.style.left = "calc(100% - 64px)";
-    const doll = { el, worth };
+    const doll = { el, item };
     doll.timeoutId = this.delay(() => this.dropDoll(doll), this.level.travelMs);
     this.belt.push(doll);
     this.updateFront();
@@ -1136,6 +1186,14 @@ class DeliveryGraphGame extends BaseGame {
     this.belt.splice(index, 1);
     doll.el.classList.add("dropped");
     this.delay(() => doll.el.remove(), 600);
+    if (doll.item.bomb) {
+      this.addScore(-Math.min(8, this.score));
+      this.updateFront();
+      this.updateHud();
+      this.complain("쾅! 💥 폭탄이 배송 센터 끝에서 터졌어요! 폐기 버튼으로 미리 버려야 해요.");
+      this.checkState();
+      return;
+    }
     this.broken += 1;
     this.addScore(-Math.min(5, this.score));
     sound.playFailure();
@@ -1149,25 +1207,31 @@ class DeliveryGraphGame extends BaseGame {
     if (this.phase !== "run") return;
     const doll = this.belt[0];
     if (!doll) {
-      this.setFeedback("아직 벨트에 보낼 인형이 없어요!", "bad");
+      this.setFeedback("아직 벨트에 보낼 물건이 없어요!", "bad");
       return;
     }
     const dest = this.dests[destIndex];
+    if (doll.item.bomb) {
+      this.complain(`손님에게 폭탄 💣을 보낼 뻔했어요! 폭탄은 폐기 버튼(4)으로 버리세요.`);
+      return;
+    }
+    if (this.level.typed && doll.item.type !== destIndex) {
+      const type = this.dollTypes[doll.item.type];
+      const rightDest = this.dests[doll.item.type];
+      this.complain(`${type.emoji} ${type.name}은 ${rightDest.icon} ${rightDest.name}로 배송해야 해요!`);
+      return;
+    }
     const need = this.targets[destIndex] - this.counts[destIndex];
     if (need <= 0) {
       this.complain(`${dest.name}${dest.name === "집" ? "으" : ""}로는 이미 주문량만큼 보냈어요! 그래프를 다시 비교하세요.`);
-      return;
-    }
-    if (doll.worth === 2 && need < 2) {
-      this.complain("황금 인형은 한 번에 2개! 2개 이상 모자란 곳에만 보낼 수 있어요.");
       return;
     }
     clearTimeout(doll.timeoutId);
     this.belt.shift();
     doll.el.classList.add("shipped");
     this.delay(() => doll.el.remove(), 450);
-    this.counts[destIndex] += doll.worth;
-    this.addScore(6 * doll.worth);
+    this.counts[destIndex] += 1;
+    this.addScore(6);
     sound.playMove();
     this.refreshMyChart();
     this.updateFront();
@@ -1176,8 +1240,33 @@ class DeliveryGraphGame extends BaseGame {
       sound.playSuccess();
       this.setFeedback(`${dest.name} 주문 완료! ✅`, "good");
     } else {
-      this.setFeedback(`${dest.name}에 ${doll.worth}개 배송!`, "good");
+      this.setFeedback(`${dest.name}에 ${this.itemEmoji(doll.item)} 1개 배송!`, "good");
     }
+    this.checkState();
+  }
+
+  trashFront() {
+    if (this.phase !== "run") return;
+    const doll = this.belt[0];
+    if (!doll) {
+      this.setFeedback("아직 벨트에 버릴 물건이 없어요!", "bad");
+      return;
+    }
+    clearTimeout(doll.timeoutId);
+    this.belt.shift();
+    doll.el.classList.add("dropped");
+    this.delay(() => doll.el.remove(), 600);
+    if (doll.item.bomb) {
+      this.addScore(8);
+      sound.playSuccess();
+      this.setFeedback("폭탄 제거 성공! 💣🗑️ +8점", "good");
+    } else {
+      this.broken += 1;
+      sound.playFailure();
+      this.setFeedback("멀쩡한 인형을 버렸어요! 💔 여분이 줄어들어요.", "bad");
+    }
+    this.updateFront();
+    this.updateHud();
     this.checkState();
   }
 
@@ -1210,7 +1299,11 @@ class DeliveryGraphGame extends BaseGame {
 
   updateHud() {
     const left = document.getElementById("hud-left");
-    if (left) left.textContent = this.dollPlan.length + this.belt.length;
+    if (left) {
+      left.textContent =
+        this.dollPlan.filter((item) => !item.bomb).length +
+        this.belt.filter((doll) => !doll.item.bomb).length;
+    }
     const broken = document.getElementById("hud-broken");
     if (broken) broken.textContent = this.broken;
     const meter = document.getElementById("complaint-meter");
@@ -1225,15 +1318,18 @@ class DeliveryGraphGame extends BaseGame {
       this.winLevel();
       return;
     }
-    const remaining = [...this.dollPlan, ...this.belt.map((d) => d.worth)];
-    const worthLeft = remaining.reduce((a, b) => a + b, 0);
-    if (worthLeft < needed) {
-      this.failLevel("인형이 너무 많이 부서져서 주문을 다 채울 수 없어요. 다음엔 떨어지기 전에 보내요!");
+    const remaining = [...this.dollPlan, ...this.belt.map((d) => d.item)].filter((item) => !item.bomb);
+    if (this.level.typed) {
+      const byType = this.dests.map((_, type) => remaining.filter((item) => item.type === type).length);
+      const short = needs.findIndex((need, i) => need > byType[i]);
+      if (short !== -1) {
+        const type = this.dollTypes[short];
+        this.failLevel(`${type.emoji} ${type.name}이 부족해서 ${this.dests[short].name} 주문을 채울 수 없어요. 인형을 아껴 쓰세요!`);
+      }
       return;
     }
-    const onlyGoldens = remaining.length > 0 && remaining.every((w) => w === 2);
-    if (onlyGoldens && Math.max(...needs) < 2) {
-      this.failLevel("남은 건 황금 인형뿐인데 2개가 필요한 곳이 없어요. 황금 인형을 아껴 쓰세요!");
+    if (remaining.length < needed) {
+      this.failLevel("인형이 너무 많이 부서져서 주문을 다 채울 수 없어요. 다음엔 떨어지기 전에 보내요!");
     }
   }
 
