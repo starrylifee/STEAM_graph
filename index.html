@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>막대그래프 STEAM 게임</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <button id="back-button" class="tool-button ghost hidden" type="button" aria-label="처음으로">처음</button>
+      <div class="brand-block">
+        <p class="eyebrow">STEAM 수학 미니게임</p>
+        <h1 id="app-title">막대그래프 게임 연구소</h1>
+      </div>
+      <div class="header-actions">
+        <button id="letter-button" class="tool-button" type="button">편지</button>
+        <button id="sound-button" class="tool-button" type="button" aria-pressed="true">소리 켬</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="dashboard-view" class="view">
+        <div class="dashboard-top">
+          <div>
+            <p class="eyebrow">학생 설계 PDF 기반</p>
+            <h2>막대그래프를 만들고, 비교하고, 구조물로 바꾸는 다섯 가지 게임</h2>
+          </div>
+          <div class="quick-stats">
+            <span>5개 게임</span>
+            <span>19쪽 설계</span>
+            <span>막대그래프</span>
+          </div>
+        </div>
+        <div id="game-grid" class="game-grid" aria-label="게임 선택"></div>
+      </section>
+
+      <section id="game-view" class="view hidden">
+        <div class="game-shell">
+          <aside class="status-panel">
+            <p class="eyebrow">현재 게임</p>
+            <h2 id="game-title"></h2>
+            <p id="game-student" class="student-line"></p>
+            <p id="game-concept" class="concept-line"></p>
+
+            <div class="metric-grid">
+              <div>
+                <span>단계</span>
+                <strong id="level-label">1</strong>
+              </div>
+              <div>
+                <span>점수</span>
+                <strong id="score-label">0</strong>
+              </div>
+              <div>
+                <span>기회</span>
+                <strong id="attempt-label">3</strong>
+              </div>
+            </div>
+
+            <button id="design-button" class="tool-button wide" type="button">학생 설계 보기</button>
+          </aside>
+
+          <section class="play-stage">
+            <div id="scene" class="scene" aria-live="polite"></div>
+          </section>
+
+          <aside id="controls" class="control-panel"></aside>
+        </div>
+      </section>
+    </main>
+
+    <div id="result-overlay" class="overlay hidden" role="dialog" aria-modal="true">
+      <div class="overlay-panel">
+        <p id="overlay-kicker" class="eyebrow"></p>
+        <h2 id="overlay-title"></h2>
+        <p id="overlay-message"></p>
+        <button id="overlay-button" class="primary-button" type="button">계속</button>
+      </div>
+    </div>
+
+    <div id="design-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="학생 설계 보기">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">원본 설계</p>
+            <h2 id="design-title"></h2>
+          </div>
+          <div class="modal-actions">
+            <a id="pdf-link" class="tool-button" href="source/20260611075405.pdf" target="_blank" rel="noreferrer">PDF 열기</a>
+            <div class="view-toggle" role="group" aria-label="설계 이미지 보기 방식">
+              <button id="sheet-readable" class="tool-button active" type="button">읽기용</button>
+              <button id="sheet-original" class="tool-button" type="button">원본</button>
+            </div>
+            <button id="close-design-button" class="tool-button ghost" type="button">닫기</button>
+          </div>
+        </div>
+        <div class="sheet-viewer">
+          <button id="sheet-prev" class="tool-button" type="button">이전</button>
+          <figure>
+            <img id="sheet-image" src="" alt="">
+            <figcaption id="sheet-caption"></figcaption>
+          </figure>
+          <button id="sheet-next" class="tool-button" type="button">다음</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="student-letter-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="student-letter-title">
+      <div class="modal-panel letter-panel">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">기획자에게 보내는 편지</p>
+            <h2 id="student-letter-title">너희 게임을 더 게임답게 디버깅하는 시간</h2>
+          </div>
+          <button id="close-letter-button" class="tool-button ghost" type="button">닫기</button>
+        </div>
+        <div class="letter-body">
+          <section class="letter-note">
+            <p>막대그래프 게임을 기획한 여러분에게.</p>
+            <p>여러분의 설계는 단순히 문제를 맞히는 활동이 아니라, 거미를 잡고, 인형을 배송하고, 대상을 찾고, 계단을 쌓고, 로켓을 발사하는 이야기로 수학을 움직이게 만들었습니다. 이제 할 일은 하나예요. “내가 생각한 재미가 플레이어에게도 보이는가?”를 종이 위에서 먼저 디버깅해 보는 것입니다.</p>
+            <p>컴퓨터 게임을 바로 고치기 전에 종이로 시험하면 더 빨리 알 수 있어요. 친구가 어디서 헷갈리는지, 막대그래프가 정말 필요한지, 실패했을 때 다시 해보고 싶은지 찾아봅시다.</p>
+          </section>
+
+          <section class="debug-activity">
+            <h3>종이 디버깅 활동</h3>
+            <ol>
+              <li><strong>원래 의도 찾기:</strong> “학생 설계 보기”에서 자기 팀 PDF를 보고, “플레이어가 하는 행동”과 “막대그래프가 필요한 순간”을 종이에 각각 한 문장으로 씁니다.</li>
+              <li><strong>종이 화면 만들기:</strong> A4 종이를 `이야기 장면`, `조작 버튼`, `막대그래프` 세 칸으로 나누고 1단계 화면을 손으로 그립니다.</li>
+              <li><strong>친구 플레이 테스트:</strong> 만든 사람이 설명하지 않고, 친구가 손가락과 연필로 플레이하게 합니다. 멈춘 곳, 헷갈린 말, 너무 쉬운 곳을 표시합니다.</li>
+              <li><strong>버그 이름 붙이기:</strong> 찾은 문제를 `규칙 버그`, `그래프 버그`, `재미 버그`, `화면 버그` 중 하나로 분류합니다.</li>
+              <li><strong>한 가지 수정 약속:</strong> 오늘 바로 고칠 것 하나만 정합니다. 예: “거미가 가까워지는 시간 제한 추가”, “배송을 드래그로 바꾸기”, “틀렸을 때 왜 틀렸는지 보여주기”.</li>
+            </ol>
+          </section>
+
+          <section class="debug-prompts">
+            <h3>팀별 점검 질문</h3>
+            <div class="prompt-grid">
+              <p><strong>거미잡기:</strong> 그래프를 맞추는 행동이 거미줄을 끊는 느낌으로 보이나요?</p>
+              <p><strong>인형 배송:</strong> 배송을 잘못했을 때 다시 생각할 이유가 있나요?</p>
+              <p><strong>벌레와 생쥐:</strong> 찾는 재미와 세는 수학이 둘 다 살아 있나요?</p>
+              <p><strong>계단 쌓기:</strong> 막대 높이 비교가 계단의 높이 차이로 잘 보이나요?</p>
+              <p><strong>로켓:</strong> 표와 그래프를 정확히 맞춰야 발사되는 이유가 분명한가요?</p>
+            </div>
+          </section>
+
+          <button id="start-debug-button" class="primary-button" type="button">디버깅 시작하기</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
