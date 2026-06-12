@@ -10,7 +10,7 @@ const gamesData = [
     summary: "거미를 직접 사냥해 모은 기록을 시간 안에 막대그래프로 그리고, 그래프를 읽어 막대선생을 구출합니다.",
     sheets: [1, 2, 3, 4].map(readableSheet),
     originalSheets: [1, 2, 3, 4].map(originalSheet),
-    preview: readableSheet(1),
+    preview: "assets/preview-spider.svg",
     color: "#257a5c",
     soft: "#dff4e9",
     ink: "#1f6b50",
@@ -24,7 +24,7 @@ const gamesData = [
     summary: "컨베이어로 밀려오는 인형을 주문서 그래프와 똑같아지게 배송합니다. 레벨이 오르면 폭탄 💣이 섞이고, 인형마다 배송지가 달라져요!",
     sheets: [5, 6, 7].map(readableSheet),
     originalSheets: [5, 6, 7].map(originalSheet),
-    preview: readableSheet(7),
+    preview: "assets/preview-delivery.svg",
     color: "#d95f4f",
     soft: "#ffe7df",
     ink: "#b7473b",
@@ -38,7 +38,7 @@ const gamesData = [
     summary: "깜깜한 방을 손전등으로 비춰 도망 다니는 녀석들을 잡고, 뒤죽박죽 포획 주머니를 세어 똑같은 그래프를 찾아냅니다.",
     sheets: [8, 9, 10].map(readableSheet),
     originalSheets: [8, 9, 10].map(originalSheet),
-    preview: readableSheet(10),
+    preview: "assets/preview-catch.svg",
     color: "#e2a72c",
     soft: "#fff1c8",
     ink: "#8a620d",
@@ -52,7 +52,7 @@ const gamesData = [
     summary: "호랑이가 쫓아와요! 떡 인기 투표를 읽고 표가 적은 떡 상자부터 계단을 쌓아 하늘 동아줄로 탈출합니다.",
     sheets: [11, 12, 13, 14, 15].map(readableSheet),
     originalSheets: [11, 12, 13, 14, 15].map(originalSheet),
-    preview: readableSheet(15),
+    preview: "assets/preview-stairs.svg",
     color: "#7057b8",
     soft: "#eee8ff",
     ink: "#5b4698",
@@ -66,7 +66,7 @@ const gamesData = [
     summary: "단서 카드를 추리해 연료 탱크의 높이를 알아내고, 카운트다운이 끝나기 전에 그래프를 완성해 로켓을 우주로 보냅니다.",
     sheets: [16, 17, 18, 19].map(readableSheet),
     originalSheets: [16, 17, 18, 19].map(originalSheet),
-    preview: readableSheet(19),
+    preview: "assets/preview-rocket.svg",
     color: "#3f75c9",
     soft: "#e4eeff",
     ink: "#315da0",
@@ -231,10 +231,24 @@ function showView(name) {
   elements.backButton.classList.toggle("hidden", !isGame);
 }
 
+function applyAccent(info) {
+  const root = document.documentElement.style;
+  if (info) {
+    root.setProperty("--accent", info.color);
+    root.setProperty("--accent-soft", info.soft);
+    root.setProperty("--accent-ink", info.ink);
+  } else {
+    root.removeProperty("--accent");
+    root.removeProperty("--accent-soft");
+    root.removeProperty("--accent-ink");
+  }
+}
+
 function enterGame(id) {
   sound.playSelect();
   currentGame?.cleanup?.();
   activeGameInfo = gamesData.find((game) => game.id === id);
+  applyAccent(activeGameInfo);
   elements.title.textContent = activeGameInfo.title;
   elements.gameTitle.textContent = activeGameInfo.title;
   elements.gameStudent.textContent = `기획: ${activeGameInfo.student}`;
@@ -248,6 +262,7 @@ function backToDashboard() {
   currentGame?.cleanup?.();
   currentGame = null;
   activeGameInfo = null;
+  applyAccent(null);
   elements.title.textContent = "막대그래프 게임 연구소";
   renderDashboard();
   showView("dashboard");

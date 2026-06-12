@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f1ecff"/>
+      <stop offset="1" stop-color="#ded3f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="240" fill="url(#bg)"/>
+  <rect y="206" width="400" height="34" fill="#c4b4e8"/>
+  <!-- 구름과 동아줄 -->
+  <text x="338" y="42" font-size="34" text-anchor="middle">☁️</text>
+  <line x1="338" y1="46" x2="338" y2="78" stroke="#a98e5b" stroke-width="4" stroke-linecap="round"/>
+  <text x="338" y="100" font-size="26" text-anchor="middle">🪢</text>
+  <!-- 떡 상자 계단 (작은 것부터) -->
+  <g>
+    <rect x="120" y="176" width="46" height="30" rx="7" fill="#9b85d4"/>
+    <rect x="172" y="152" width="46" height="54" rx="7" fill="#8a70cb"/>
+    <rect x="224" y="124" width="46" height="82" rx="7" fill="#7c5fc2"/>
+    <rect x="276" y="92" width="46" height="114" rx="7" fill="#7057b8"/>
+    <text x="143" y="197" font-size="15" text-anchor="middle">🍡</text>
+    <text x="195" y="184" font-size="15" text-anchor="middle">🍡</text>
+    <text x="247" y="160" font-size="15" text-anchor="middle">🍡</text>
+    <text x="299" y="130" font-size="15" text-anchor="middle">🍡</text>
+  </g>
+  <!-- 도망가는 아이와 호랑이 -->
+  <text x="299" y="86" font-size="32" text-anchor="middle">🧒</text>
+  <text x="52" y="200" font-size="40" text-anchor="middle">🐯</text>
+  <text x="92" y="166" font-size="18" text-anchor="middle" opacity="0.7">💨</text>
+</svg>

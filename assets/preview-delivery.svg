@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff4ed"/>
+      <stop offset="1" stop-color="#ffe2d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="240" fill="url(#bg)"/>
+  <!-- 배송지 간판 -->
+  <g>
+    <rect x="244" y="22" width="44" height="44" rx="10" fill="#fff" stroke="#f0c4b2" stroke-width="2"/>
+    <rect x="298" y="22" width="44" height="44" rx="10" fill="#fff" stroke="#f0c4b2" stroke-width="2"/>
+    <rect x="352" y="22" width="44" height="44" rx="10" fill="#fff" stroke="#f0c4b2" stroke-width="2"/>
+    <text x="266" y="54" font-size="26" text-anchor="middle">🏪</text>
+    <text x="320" y="54" font-size="26" text-anchor="middle">🏠</text>
+    <text x="374" y="54" font-size="26" text-anchor="middle">✈️</text>
+  </g>
+  <!-- 컨베이어 벨트 -->
+  <rect x="-10" y="118" width="420" height="26" rx="13" fill="#565a68"/>
+  <g fill="#3d404c">
+    <circle cx="40" cy="152" r="9"/>
+    <circle cx="120" cy="152" r="9"/>
+    <circle cx="200" cy="152" r="9"/>
+    <circle cx="280" cy="152" r="9"/>
+    <circle cx="360" cy="152" r="9"/>
+  </g>
+  <!-- 벨트 위 인형과 폭탄 -->
+  <text x="64" y="112" font-size="40" text-anchor="middle">🧸</text>
+  <text x="150" y="112" font-size="40" text-anchor="middle">🐰</text>
+  <text x="236" y="112" font-size="40" text-anchor="middle">🐱</text>
+  <text x="322" y="112" font-size="36" text-anchor="middle">💣</text>
+  <!-- 주문서 그래프 -->
+  <g>
+    <rect x="44" y="170" width="120" height="58" rx="10" fill="#fff" stroke="#f0c4b2" stroke-width="2"/>
+    <rect x="58" y="190" width="22" height="30" rx="4" fill="#d95f4f"/>
+    <rect x="88" y="182" width="22" height="38" rx="4" fill="#e2806f"/>
+    <rect x="118" y="198" width="22" height="22" rx="4" fill="#b7473b"/>
+    <text x="36" y="186" font-size="20">📋</text>
+  </g>
+  <text x="330" y="216" font-size="34" text-anchor="middle">🚚</text>
+</svg>

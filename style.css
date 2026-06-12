@@ -297,8 +297,10 @@ button {
   padding: 12px 16px;
   border: none;
   background: linear-gradient(135deg, #2f9472, #1f6b50);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent, #257a5c) 82%, #fff), var(--accent, #1f6b50));
   color: #fff;
   box-shadow: 0 8px 18px rgba(37, 122, 92, 0.28);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent, #257a5c) 32%, transparent);
 }
 
 .primary-button:hover {
@@ -330,6 +332,7 @@ button {
 .status-panel,
 .control-panel {
   padding: 16px;
+  border-top: 6px solid var(--accent, var(--green));
 }
 
 .status-panel h2 {
@@ -357,8 +360,8 @@ button {
   padding: 10px 8px;
   border: none;
   border-radius: var(--radius-md);
-  background: linear-gradient(180deg, #f8fbff, #eef3fc);
-  box-shadow: inset 0 0 0 1px rgba(63, 117, 201, 0.08);
+  background: linear-gradient(180deg, #fbfdff, var(--accent-soft, #eef3fc));
+  box-shadow: inset 0 0 0 1px rgba(34, 36, 44, 0.06);
   text-align: center;
 }
 
@@ -384,6 +387,7 @@ button {
   min-height: 600px;
   height: 100%;
   padding: 18px;
+  background: linear-gradient(180deg, var(--accent-soft, transparent), rgba(255, 255, 255, 0) 28%);
 }
 
 .control-panel {
@@ -397,6 +401,7 @@ button {
   margin: 0;
   font-size: 1.08rem;
   line-height: 1.3;
+  color: var(--accent-ink, var(--ink));
 }
 
 .panel-copy {
@@ -2297,4 +2302,19 @@ button {
 .gchart,
 .web-cage {
   border-radius: 12px;
+}
+
+/* ===== 아트 디렉션: 게임별 테마 컬러 ===== */
+.game-card .primary-button {
+  background: var(--card-color, #257a5c);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--card-color, #257a5c) 82%, #fff), var(--card-color, #257a5c));
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--card-color, #257a5c) 32%, transparent);
+}
+
+.overlay-panel .eyebrow {
+  color: var(--accent-ink, var(--muted));
+}
+
+.game-card img {
+  border-bottom: none;
 }
