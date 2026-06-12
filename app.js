@@ -164,6 +164,33 @@ class SoundSynth {
   }
 }
 
+const records = {
+  key: "graph-lab-records",
+  load() {
+    try {
+      return JSON.parse(localStorage.getItem(this.key)) || {};
+    } catch {
+      return {};
+    }
+  },
+  get(id) {
+    return this.load()[id] || null;
+  },
+  recordClear(id, score) {
+    const all = this.load();
+    const prev = all[id] || { best: 0, clears: 0 };
+    const isNewBest = score > prev.best;
+    const entry = { best: Math.max(prev.best, score), clears: prev.clears + 1 };
+    all[id] = entry;
+    try {
+      localStorage.setItem(this.key, JSON.stringify(all));
+    } catch {
+      /* 저장 불가 환경(시크릿 모드 등)에서는 기록 없이 진행 */
+    }
+    return { ...entry, isNewBest };
+  }
+};
+
 const sound = new SoundSynth();
 let currentGame = null;
 let activeGameInfo = null;
@@ -174,6 +201,7 @@ let activeSheetMode = "readable";
 function renderDashboard() {
   elements.gameGrid.innerHTML = "";
   gamesData.forEach((game, index) => {
+    const record = records.get(game.id);
     const card = document.createElement("article");
     card.className = "game-card";
     card.style.setProperty("--card-color", game.color);
@@ -183,9 +211,10 @@ function renderDashboard() {
       <img src="${game.preview}" alt="${game.title} 설계 미리보기">
       <div class="game-card-body">
         <p class="eyebrow">게임 ${index + 1}</p>
-        <h3>${game.title}</h3>
+        <h3>${game.title}${record ? ' <span class="clear-star" title="클리어!">⭐</span>' : ""}</h3>
         <p><strong>기획:</strong> ${game.student}</p>
         <p>${game.summary}</p>
+        ${record ? `<p class="record-line">🏆 최고 ${record.best}점 · 클리어 ${record.clears}번</p>` : ""}
         <div class="tag-row">${game.tags.map((tag) => `<span>${tag}</span>`).join("")}</div>
         <button class="primary-button" type="button">플레이</button>
       </div>
@@ -220,6 +249,7 @@ function backToDashboard() {
   currentGame = null;
   activeGameInfo = null;
   elements.title.textContent = "막대그래프 게임 연구소";
+  renderDashboard();
   showView("dashboard");
 }
 
@@ -368,7 +398,11 @@ class BaseGame {
     const isLast = this.levelIndex >= this.levels.length - 1;
     if (isLast) {
       sound.playWin();
-      showOverlay(true, "전체 성공", message, backToDashboard, "대시보드");
+      const result = records.recordClear(this.info.id, this.score);
+      const recordNote = result.isNewBest
+        ? ` 🏆 최고 기록 ${result.best}점 달성!`
+        : ` (최고 기록 ${result.best}점)`;
+      showOverlay(true, "전체 성공", message + recordNote, backToDashboard, "대시보드");
       return;
     }
     sound.playSuccess();
@@ -1374,7 +1408,7 @@ class CatchGraphGame extends BaseGame {
         candidates: 3,
         showValues: true,
         bats: 0,
-        pickSec: 35
+        pickSec: 45
       },
       {
         title: "창고 수색",
@@ -1386,7 +1420,7 @@ class CatchGraphGame extends BaseGame {
         candidates: 4,
         showValues: true,
         bats: 0,
-        pickSec: 35
+        pickSec: 45
       },
       {
         title: "지하실 대소동",
@@ -1398,7 +1432,7 @@ class CatchGraphGame extends BaseGame {
         candidates: 4,
         showValues: false,
         bats: 2,
-        pickSec: 40
+        pickSec: 55
       }
     ];
   }
@@ -1423,7 +1457,7 @@ class CatchGraphGame extends BaseGame {
         <div class="hunt-brief">
           <p class="panel-copy"><strong>임무:</strong> ${this.level.story}</p>
           <p class="panel-copy"><strong>1. 사냥 (${this.level.huntSec}초):</strong> 어둠 속에 ${this.types.map((t) => t.emoji).join(" ")} ${total}마리가 숨어 있고, 계속 자리를 옮겨 다녀요. 마우스로 손전등을 비추며 찾아서 클릭!</p>
-          <p class="panel-copy"><strong>2. 정리 (${this.level.pickSec}초):</strong> 포획 주머니에 뒤죽박죽 담긴 녀석들을 종류별로 세고, 똑같은 막대그래프를 고르세요. 못 잡고 도망간 녀석은 세지 않아요!</p>
+          <p class="panel-copy"><strong>2. 정리 (${this.level.pickSec}초):</strong> 포획 주머니에 뒤죽박죽 담긴 녀석들을 눌러서 종류별 바구니로 옮겨 담으세요. 다 옮기면 바구니의 수와 똑같은 막대그래프를 고릅니다. 못 잡고 도망간 녀석은 세지 않아요!</p>
           <p class="panel-copy"><strong>주의:</strong> 틀린 그래프를 고르면 점수 -10에 시간이 8초 줄어요. 시간이 다 되면 사냥부터 다시!</p>
         </div>
       </div>
@@ -1631,6 +1665,8 @@ class CatchGraphGame extends BaseGame {
   startPickPhase() {
     this.pickLeft = this.level.pickSec;
     this.candidateList = this.makeCandidates();
+    this.unsorted = this.pile.length;
+    this.sortedCounts = this.types.map(() => 0);
     const shuffledPile = [...this.pile];
     for (let i = shuffledPile.length - 1; i > 0; i -= 1) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -1642,17 +1678,25 @@ class CatchGraphGame extends BaseGame {
           <h3>${this.level.title} · 포획물 정리</h3>
           <span class="scene-badge timer-badge">⏱ <b id="pick-timer">${this.pickLeft}</b>초</span>
         </div>
-        <p class="panel-copy">주머니 속 포획물을 종류별로 세어 보세요.${this.escaped > 0 ? ` 도망간 ${this.escaped}마리는 세지 않아요!` : " 한 마리도 놓치지 않았어요!"}</p>
-        <div class="catch-pouch">
+        <p class="panel-copy">주머니 속 포획물을 눌러서 종류별 바구니로 옮기며 세어 보세요.${this.escaped > 0 ? ` 도망간 ${this.escaped}마리는 세지 않아요!` : " 한 마리도 놓치지 않았어요!"}</p>
+        <div class="catch-pouch" id="catch-pouch">
           ${shuffledPile.length
-            ? shuffledPile.map((typeIndex) => `<span>${this.types[typeIndex].emoji}</span>`).join("")
+            ? shuffledPile.map((typeIndex) => `<button type="button" class="pouch-item" data-type="${typeIndex}">${this.types[typeIndex].emoji}</button>`).join("")
             : '<span class="rescued-note">주머니가 비었어요... 그래도 0마리 그래프를 찾을 수 있죠?</span>'}
         </div>
-        <div class="pouch-legend">
-          ${this.types.map((type) => `<span>${type.emoji} ${type.name}</span>`).join("")}
+        <div class="sort-bins">
+          ${this.types.map((type, index) => `
+            <div class="sort-bin" style="--bin-color:${type.color}">
+              <div class="bin-head">${type.emoji} ${type.name} <b id="bin-count-${index}">0</b>마리</div>
+              <div class="bin-body" id="bin-body-${index}"></div>
+            </div>
+          `).join("")}
         </div>
       </div>
     `;
+    this.scene.querySelectorAll(".pouch-item").forEach((button) => {
+      button.onclick = () => this.sortItem(button);
+    });
     this.renderCandidates();
     this.every(() => {
       this.pickLeft -= 1;
@@ -1661,11 +1705,43 @@ class CatchGraphGame extends BaseGame {
     }, 1000);
   }
 
+  sortItem(button) {
+    if (this.phase !== "pick" || button.disabled) return;
+    const typeIndex = Number(button.dataset.type);
+    button.disabled = true;
+    button.classList.add("sorted-out");
+    this.delay(() => button.remove(), 220);
+    this.sortedCounts[typeIndex] += 1;
+    this.unsorted -= 1;
+    const body = document.getElementById(`bin-body-${typeIndex}`);
+    if (body) body.insertAdjacentHTML("beforeend", `<span>${this.types[typeIndex].emoji}</span>`);
+    const count = document.getElementById(`bin-count-${typeIndex}`);
+    if (count) count.textContent = this.sortedCounts[typeIndex];
+    sound.playMove();
+    if (this.unsorted === 0) {
+      sound.playSuccess();
+      this.setOptionsLocked(false);
+    }
+  }
+
+  setOptionsLocked(locked) {
+    this.controls.querySelectorAll(".chart-option").forEach((button) => {
+      if (button.classList.contains("wrong-option")) return;
+      button.disabled = locked;
+      button.classList.toggle("option-locked", locked);
+    });
+    const note = document.getElementById("pick-feedback");
+    if (note && !locked && this.pile.length) {
+      note.textContent = "정리 끝! 바구니의 수와 똑같은 그래프를 고르세요.";
+      note.className = "feedback-note good";
+    }
+  }
+
   renderCandidates() {
     this.controls.innerHTML = `
       <h3 class="panel-title">같은 그래프를 찾아라!</h3>
       <p class="panel-copy">${this.level.showValues
-        ? "센 수와 똑같은 막대그래프를 고르세요. 비슷한 가짜가 섞여 있어요!"
+        ? "바구니에 담은 수와 똑같은 막대그래프를 고르세요. 비슷한 가짜가 섞여 있어요!"
         : "이번엔 숫자가 없어요! 눈금 칸을 세어 막대 높이를 읽으세요."}</p>
       <div class="option-grid" id="option-grid">
         ${this.candidateList.map((values, index) => `
@@ -1678,11 +1754,12 @@ class CatchGraphGame extends BaseGame {
           </button>
         `).join("")}
       </div>
-      <p class="feedback-note" id="pick-feedback"></p>
+      <p class="feedback-note" id="pick-feedback">${this.unsorted > 0 ? "주머니를 모두 정리해야 그래프를 고를 수 있어요!" : ""}</p>
     `;
     this.controls.querySelectorAll(".chart-option").forEach((button) => {
       button.onclick = () => this.chooseOption(button);
     });
+    this.setOptionsLocked(this.unsorted > 0);
   }
 
   chooseOption(button) {
@@ -2046,42 +2123,64 @@ class RocketGraphGame extends BaseGame {
       const j = Math.floor(Math.random() * (i + 1));
       [order[i], order[j]] = [order[j], order[i]];
     }
-    const defined = [order[0]];
-    const clues = [{ cat: order[0], text: `${this.cats[order[0]]} 탱크: 정확히 ${this.target[order[0]]}칸` }];
+    const first = order[0];
+    const firstValue = this.target[first];
+    const defined = [first];
+    const clues = [{
+      cats: [first],
+      text: `${this.cats[first]} 탱크: 정확히 ${firstValue}칸`,
+      check: (v) => v[first] === firstValue
+    }];
     for (let k = 1; k < order.length; k += 1) {
       const i = order[k];
       const value = this.target[i];
       const specials = [];
       defined.forEach((ref) => {
         if (relations.includes("double") && value === this.target[ref] * 2) {
-          specials.push(`${this.cats[i]} 탱크: ${this.cats[ref]} 탱크의 2배`);
+          specials.push({
+            cats: [i, ref],
+            text: `${this.cats[i]} 탱크: ${this.cats[ref]} 탱크의 2배`,
+            check: (v) => v[i] === v[ref] * 2
+          });
         }
         if (relations.includes("half") && value * 2 === this.target[ref]) {
-          specials.push(`${this.cats[i]} 탱크: ${this.cats[ref]} 탱크의 절반`);
+          specials.push({
+            cats: [i, ref],
+            text: `${this.cats[i]} 탱크: ${this.cats[ref]} 탱크의 절반`,
+            check: (v) => v[i] * 2 === v[ref]
+          });
         }
       });
       if (relations.includes("sum") && defined.length >= 2) {
         for (let a = 0; a < defined.length; a += 1) {
           for (let b = a + 1; b < defined.length; b += 1) {
             if (this.target[defined[a]] + this.target[defined[b]] === value) {
-              const first = this.cats[defined[a]];
-              const hasJong = (first.charCodeAt(first.length - 1) - 44032) % 28 > 0;
-              specials.push(`${this.cats[i]} 탱크: ${first}${hasJong ? "과" : "와"} ${this.cats[defined[b]]} 탱크를 더한 만큼`);
+              const refA = defined[a];
+              const refB = defined[b];
+              const firstName = this.cats[refA];
+              const hasJong = (firstName.charCodeAt(firstName.length - 1) - 44032) % 28 > 0;
+              specials.push({
+                cats: [i, refA, refB],
+                text: `${this.cats[i]} 탱크: ${firstName}${hasJong ? "과" : "와"} ${this.cats[refB]} 탱크를 더한 만큼`,
+                check: (v) => v[i] === v[refA] + v[refB]
+              });
             }
           }
         }
       }
-      let text;
+      let clue;
       if (specials.length) {
-        text = specials[Math.floor(Math.random() * specials.length)];
+        clue = specials[Math.floor(Math.random() * specials.length)];
       } else {
         const ref = defined[Math.floor(Math.random() * defined.length)];
         const diff = value - this.target[ref];
+        let text;
         if (diff === 0) text = `${this.cats[i]} 탱크: ${this.cats[ref]} 탱크와 같은 높이`;
         else if (diff > 0) text = `${this.cats[i]} 탱크: ${this.cats[ref]} 탱크보다 ${diff}칸 더 높게`;
         else text = `${this.cats[i]} 탱크: ${this.cats[ref]} 탱크보다 ${-diff}칸 더 낮게`;
+        clue = { cats: [i, ref], text, check: (v) => v[i] === v[ref] + diff };
       }
-      clues.push({ cat: i, text });
+      clues.push(clue);
       defined.push(i);
     }
     if (this.level.shuffleClues) {
@@ -2227,9 +2326,15 @@ class RocketGraphGame extends BaseGame {
       <button class="primary-button" type="button" id="launch-button">🚀 지금 발사!</button>
       <p class="feedback-note" id="rocket-feedback"></p>
     `;
-    this.clues.forEach((_, index) => {
+    this.clues.forEach((clue, index) => {
       const card = document.getElementById(`clue-${index}`);
       card.onclick = () => card.classList.toggle("done");
+      const setGlow = (on) => clue.cats.forEach((cat) => {
+        const col = document.getElementById(`rcol-${cat}`);
+        if (col) col.classList.toggle("clue-glow", on);
+      });
+      card.onmouseenter = () => setGlow(true);
+      card.onmouseleave = () => setGlow(false);
     });
     document.getElementById("launch-button").onclick = () => this.launch(false);
   }
@@ -2296,11 +2401,22 @@ class RocketGraphGame extends BaseGame {
       return;
     }
     const altitude = ratio >= 0.75 ? "하늘 끝 🌙" : ratio >= 0.5 ? "구름 ☁️" : ratio > 0 ? "지붕 위 🏠" : "발사대";
+    const violated = this.clues.filter((clue) => !clue.check(this.values));
+    violated.forEach((clue) => {
+      const card = document.getElementById(`clue-${this.clues.indexOf(clue)}`);
+      if (card) {
+        card.classList.remove("done");
+        card.classList.add("violated");
+      }
+    });
+    const violatedNote = violated.length
+      ? ` 지켜지지 않은 단서: ${violated.map((clue) => `"${clue.text}"`).join(", ")}`
+      : "";
     this.addScore(correctCount * 6);
     sound.playFailure();
     this.delay(() => {
-      this.fail(`엔진이 ${correctCount}/${total}개만 점화되어 ${altitude}까지밖에 못 갔어요. 단서 카드를 다시 추리해서 재발사!`);
-    }, 1400);
+      this.fail(`엔진이 ${correctCount}/${total}개만 점화되어 ${altitude}까지밖에 못 갔어요.${violatedNote} 새 단서로 다시 추리해서 재발사!`);
+    }, 2300);
   }
 }
 

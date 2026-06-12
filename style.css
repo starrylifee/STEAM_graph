@@ -167,6 +167,21 @@ button {
   line-height: 1.25;
 }
 
+.clear-star {
+  font-size: 1rem;
+}
+
+.record-line {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #fff7df;
+  border: 1px solid #ecd9a0;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #8a620d;
+}
+
 .game-card p {
   margin: 0;
   color: var(--muted);
@@ -1752,6 +1767,72 @@ button {
   font-size: 0.9rem;
 }
 
+.pouch-item {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(34, 36, 44, 0.1);
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.pouch-item:hover:not(:disabled) {
+  border-color: #8d93a5;
+  transform: scale(1.08);
+}
+
+.pouch-item.sorted-out {
+  transition: transform 0.2s ease-in, opacity 0.2s ease-in;
+  transform: translateY(26px) scale(0.5);
+  opacity: 0;
+}
+
+.sort-bins {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.sort-bin {
+  border: 2px solid var(--bin-color, var(--line));
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.bin-head {
+  padding: 7px 10px;
+  background: var(--bin-color, #eee);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.bin-head b {
+  font-size: 1rem;
+}
+
+.bin-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-content: flex-start;
+  min-height: 56px;
+  padding: 8px;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.chart-option.option-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .mini-bars.tall {
   height: 96px;
   padding: 0 6px;
@@ -2068,6 +2149,25 @@ button {
 
 .clue-card.done::after {
   content: " ✅";
+}
+
+.clue-card.violated {
+  border-style: solid;
+  border-color: #d95f4f;
+  background: #ffeef0;
+  color: #b7473b;
+  animation: col-shake 0.4s;
+}
+
+.clue-card.violated::after {
+  content: " ❌";
+}
+
+.gcol.clue-glow {
+  outline: 3px dashed #e2a72c;
+  outline-offset: 2px;
+  border-radius: 8px;
+  background: #fff7df;
 }
 
 .sum-hint {
