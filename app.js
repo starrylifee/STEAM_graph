@@ -1720,6 +1720,10 @@ class CatchGraphGame extends BaseGame {
     sound.playMove();
     if (this.unsorted === 0) {
       sound.playSuccess();
+      this.delay(() => {
+        const pouch = document.getElementById("catch-pouch");
+        if (pouch) pouch.innerHTML = '<span class="rescued-note">주머니를 다 비웠어요! ✨ 바구니의 수를 보고 그래프를 고르세요.</span>';
+      }, 260);
       this.setOptionsLocked(false);
     }
   }
